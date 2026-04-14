@@ -145,7 +145,17 @@ function teamEmailHtml(d: {
 <body style="margin:0;padding:0;background:#f0f2fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
 <div style="max-width:620px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e5f0">
   <div style="background:#1a56ff;padding:24px 32px">
-    <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;font-family:sans-serif">New Lead Received 🎯</h1>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+      <tr>
+        <td style="vertical-align:middle;padding-right:10px">
+          <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:50%;text-align:center;line-height:40px;font-size:20px;font-weight:900;color:#fff;font-family:Arial,sans-serif">H</div>
+        </td>
+        <td style="vertical-align:middle">
+          <span style="font-size:20px;font-weight:800;color:#fff;font-family:Arial,sans-serif;letter-spacing:-0.3px">Hire<span style="opacity:0.8">Ready</span></span>
+        </td>
+      </tr>
+    </table>
+    <h1 style="margin:0;color:#fff;font-size:18px;font-weight:700;font-family:sans-serif">New Lead Received 🎯</h1>
     <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;font-family:sans-serif">${d.services.join(' · ')}</p>
   </div>
   <div style="padding:28px 32px">
@@ -186,9 +196,18 @@ function applicantEmailHtml(d: { fullName: string; services: string[] }) {
 <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e5f0">
 
   <!-- Header -->
-  <div style="background:#1a56ff;padding:32px;text-align:center">
-    <p style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px">HireReady</p>
-    <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px">Career Services &amp; Placement Support</p>
+  <div style="background:#1a56ff;padding:28px 32px;text-align:center">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 8px">
+      <tr>
+        <td style="vertical-align:middle;padding-right:10px">
+          <div style="width:44px;height:44px;background:rgba(255,255,255,0.15);border-radius:50%;text-align:center;line-height:44px;font-size:22px;font-weight:900;color:#fff;font-family:Arial,sans-serif">H</div>
+        </td>
+        <td style="vertical-align:middle">
+          <span style="font-size:22px;font-weight:800;color:#fff;font-family:Arial,sans-serif;letter-spacing:-0.3px">Hire<span style="opacity:0.8">Ready</span></span>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0;color:rgba(255,255,255,0.75);font-size:13px;font-family:sans-serif">Career Services &amp; Placement Support</p>
   </div>
 
   <!-- Body -->
