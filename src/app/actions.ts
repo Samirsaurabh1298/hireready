@@ -22,10 +22,12 @@ async function uploadFile(
 
 function createMailer() {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      pass: process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, ''), // strip spaces from app password
     },
   })
 }
@@ -94,6 +96,14 @@ export async function submitApplication(
       const mailer = createMailer()
       const gmailUser = process.env.GMAIL_USER
 
+      // Verify SMTP connection before sending
+      try {
+        await mailer.verify()
+        console.log('Gmail SMTP connection verified')
+      } catch (verifyErr) {
+        console.error('Gmail SMTP verify failed:', verifyErr)
+      }
+
       await Promise.race([
         Promise.all([
           // Team notification
@@ -106,17 +116,21 @@ export async function submitApplication(
               currentRole, currentCompany, experience, expectedSalary,
               skills, services, linkedinUrl, naukriUrl,
             }),
-          }),
+          }).then(info => console.log('Team email sent:', info.messageId))
+            .catch(err  => console.error('Team email failed:', err)),
           // Applicant confirmation
           mailer.sendMail({
             from:    `"HireReady" <${gmailUser}>`,
             to:      email,
             subject: 'We received your application — HireReady',
             html:    applicantEmailHtml({ fullName, services }),
-          }),
-        ]).catch(err => console.error('Gmail send error (non-fatal):', err)),
+          }).then(info => console.log('Applicant email sent:', info.messageId))
+            .catch(err  => console.error('Applicant email failed:', err)),
+        ]),
         new Promise(resolve => setTimeout(resolve, 15_000)), // 15s max
       ])
+    } else {
+      console.warn('Gmail env vars missing — GMAIL_USER or GMAIL_APP_PASSWORD not set')
     }
 
     return { success: true }
