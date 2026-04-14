@@ -1,9 +1,26 @@
 'use server'
 
 import { createServerClient } from '@/lib/supabase'
-import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+async function sendBrevoEmail(to: string, toName: string, subject: string, html: string) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': process.env.BREVO_API_KEY!,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender:      { name: 'HireReady', email: 'supporthireready@gmail.com' },
+      to:          [{ email: to, name: toName }],
+      subject,
+      htmlContent: html,
+    }),
+  })
+  const data = await res.json()
+  if (!res.ok) console.error('Brevo error:', data)
+  else console.log('Brevo email sent to', to, '— messageId:', data.messageId)
+}
 
 /* ── helpers ── */
 
@@ -81,29 +98,24 @@ export async function submitApplication(
     })
     if (dbError) throw new Error(dbError.message)
 
-    // Send emails via Resend (HTTP API — works reliably on Vercel)
+    // Send emails via Brevo (HTTP API — works reliably on Vercel, no domain needed)
     const teamEmail = process.env.TEAM_EMAIL ?? 'supporthireready@gmail.com'
-    const [teamResult, applicantResult] = await Promise.all([
-      resend.emails.send({
-        from:    'HireReady <onboarding@resend.dev>',
-        to:      teamEmail,
-        subject: `New Lead: ${fullName} — ${services.join(', ')}`,
-        html:    teamEmailHtml({
+    await Promise.all([
+      sendBrevoEmail(
+        teamEmail, 'HireReady Team',
+        `New Lead: ${fullName} — ${services.join(', ')}`,
+        teamEmailHtml({
           fullName, email, phone, currentLocation, preferredLocation,
           currentRole, currentCompany, experience, expectedSalary,
           skills, services, linkedinUrl, naukriUrl,
         }),
-      }),
-      resend.emails.send({
-        from:    'HireReady <onboarding@resend.dev>',
-        to:      email,
-        subject: 'We received your application — HireReady',
-        html:    applicantEmailHtml({ fullName, services }),
-      }),
+      ),
+      sendBrevoEmail(
+        email, fullName,
+        'We received your application — HireReady',
+        applicantEmailHtml({ fullName, services }),
+      ),
     ])
-    if (teamResult.error)     console.error('Team email error:',     teamResult.error)
-    if (applicantResult.error) console.error('Applicant email error:', applicantResult.error)
-    console.log('Emails sent — team:', teamResult.data?.id, 'applicant:', applicantResult.data?.id)
 
     return { success: true }
   } catch (err) {
