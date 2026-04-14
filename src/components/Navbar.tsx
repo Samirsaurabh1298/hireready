@@ -44,7 +44,7 @@ export default function Navbar() {
     >
       <div className="max-w-content mx-auto flex items-center justify-between h-[66px] gap-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-syne text-[22px] font-extrabold text-prose">
+        <Link href="/" className="flex items-center gap-2 font-syne text-[30px] font-bold text-prose">
           <svg width="30" height="30" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <circle cx="16" cy="16" r="16" fill="#1a56ff" />
             <rect x="6" y="8" width="4" height="16" rx="1.5" fill="white" />
