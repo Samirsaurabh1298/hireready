@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useRef, ReactNode } from 'react'
+import { useEffect, useRef, ReactNode, ElementType } from 'react'
 
 interface Props {
   children: ReactNode
   className?: string
-  as?: keyof JSX.IntrinsicElements
+  as?: ElementType
 }
 
 export default function AnimateOnScroll({ children, className = '', as: Tag = 'div' }: Props) {
@@ -28,7 +28,6 @@ export default function AnimateOnScroll({ children, className = '', as: Tag = 'd
   }, [])
 
   return (
-    // @ts-expect-error dynamic tag
     <Tag ref={ref} className={`animate-fade-up ${className}`}>
       {children}
     </Tag>
