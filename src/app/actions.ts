@@ -89,31 +89,34 @@ export async function submitApplication(
     })
     if (dbError) throw new Error(dbError.message)
 
-    // Send Gmail notifications (non-blocking — email failure never blocks the user)
+    // Send Gmail notifications — must be awaited on Vercel (function shuts down on return)
     if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
       const mailer = createMailer()
       const gmailUser = process.env.GMAIL_USER
 
-      Promise.all([
-        // Team notification
-        mailer.sendMail({
-          from:    `"HireReady Leads" <${gmailUser}>`,
-          to:      gmailUser,
-          subject: `New Lead: ${fullName} — ${services.join(', ')}`,
-          html:    teamEmailHtml({
-            fullName, email, phone, currentLocation, preferredLocation,
-            currentRole, currentCompany, experience, expectedSalary,
-            skills, services, linkedinUrl, naukriUrl,
+      await Promise.race([
+        Promise.all([
+          // Team notification
+          mailer.sendMail({
+            from:    `"HireReady Leads" <${gmailUser}>`,
+            to:      gmailUser,
+            subject: `New Lead: ${fullName} — ${services.join(', ')}`,
+            html:    teamEmailHtml({
+              fullName, email, phone, currentLocation, preferredLocation,
+              currentRole, currentCompany, experience, expectedSalary,
+              skills, services, linkedinUrl, naukriUrl,
+            }),
           }),
-        }),
-        // Applicant confirmation
-        mailer.sendMail({
-          from:    `"HireReady" <${gmailUser}>`,
-          to:      email,
-          subject: 'We received your application — HireReady',
-          html:    applicantEmailHtml({ fullName, services }),
-        }),
-      ]).catch(err => console.error('Gmail send error (non-fatal):', err))
+          // Applicant confirmation
+          mailer.sendMail({
+            from:    `"HireReady" <${gmailUser}>`,
+            to:      email,
+            subject: 'We received your application — HireReady',
+            html:    applicantEmailHtml({ fullName, services }),
+          }),
+        ]).catch(err => console.error('Gmail send error (non-fatal):', err)),
+        new Promise(resolve => setTimeout(resolve, 15_000)), // 15s max
+      ])
     }
 
     return { success: true }
