@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, FormEvent, ReactNode, KeyboardEvent, Children, isValidElement, cloneElement } from 'react'
+import { useState, useRef, ReactNode, KeyboardEvent, Children, isValidElement, cloneElement, Fragment } from 'react'
 import Link from 'next/link'
 import { submitApplication } from '@/app/actions'
 
@@ -48,7 +48,6 @@ function Field({
   error?: string
   children: ReactNode
 }) {
-  // Automatically inject aria-required onto the direct input/select/div child
   const enhancedChildren = required
     ? Children.map(children, child =>
         isValidElement(child)
@@ -61,27 +60,18 @@ function Field({
     <div className="mb-5">
       <label className="block text-sm font-medium mb-1.5 text-prose">
         {label}{' '}
-        {required && (
-          <span className="text-accent" aria-hidden="true">*</span>
-        )}
+        {required && <span className="text-accent" aria-hidden="true">*</span>}
       </label>
       {enhancedChildren}
       {error && (
-        <span className="block text-xs text-red-500 mt-1" role="alert">
-          {error}
-        </span>
+        <span className="block text-xs text-red-500 mt-1" role="alert">{error}</span>
       )}
     </div>
   )
 }
 
 function FileUpload({
-  id,
-  accept,
-  file,
-  icon,
-  placeholder,
-  onChange,
+  id, accept, file, icon, placeholder, onChange,
 }: {
   id: string
   accept: string
@@ -93,33 +83,20 @@ function FileUpload({
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleKey(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      inputRef.current?.click()
-    }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputRef.current?.click() }
   }
 
   return (
     <div
-      role="button"
-      tabIndex={0}
+      role="button" tabIndex={0}
       aria-label={`${placeholder} — click or press Enter`}
       onClick={() => inputRef.current?.click()}
       onKeyDown={handleKey}
       className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all select-none
-        ${file
-          ? 'border-success bg-success/[0.04]'
-          : 'border-frame bg-surface hover:border-primary hover:bg-primary/[0.03]'
-        }`}
+        ${file ? 'border-success bg-success/[0.04]' : 'border-frame bg-surface hover:border-primary hover:bg-primary/[0.03]'}`}
     >
-      <input
-        ref={inputRef}
-        type="file"
-        id={id}
-        accept={accept}
-        className="hidden"
-        onChange={e => onChange(e.target.files?.[0] ?? null)}
-      />
+      <input ref={inputRef} type="file" id={id} accept={accept} className="hidden"
+        onChange={e => onChange(e.target.files?.[0] ?? null)} />
       <div className="text-[28px] mb-2">{icon}</div>
       <div className={`text-[13px] ${file ? 'text-success font-medium' : 'text-muted'}`}>
         {file ? `✓ ${file.name}` : placeholder}
@@ -132,33 +109,27 @@ function FileUpload({
 const SERVICES = ['Resume Writing', 'Naukri Optimization', 'LinkedIn Optimization', 'Placement Support']
 
 const STEPS = [
-  { num: 1, label: '1. Personal Info' },
-  { num: 2, label: '2. Professional' },
-  { num: 3, label: '3. Career & Documents' },
+  { num: 1, label: 'Personal Info' },
+  { num: 2, label: 'Professional' },
+  { num: 3, label: 'Documents' },
 ]
 
 export default function ApplicationForm() {
   const formRef = useRef<HTMLDivElement>(null)
   const [step, setStep] = useState(1)
   const [data, setData] = useState<FormData>({
-    fullName: '',
-    email: '',
-    phone: '',
-    currentLocation: '',
-    preferredLocation: '',
-    currentRole: '',
-    currentCompany: '',
-    experience: '',
-    expectedSalary: '',
-    skills: '',
-    services: [],
-    linkedinUrl: '',
-    naukriUrl: '',
+    fullName: '', email: '', phone: '',
+    currentLocation: '', preferredLocation: '',
+    currentRole: '', currentCompany: '',
+    experience: '', expectedSalary: '',
+    skills: '', services: [],
+    linkedinUrl: '', naukriUrl: '',
     termsAccepted: false,
   })
   const [files, setFiles] = useState<Files>({ resumeFile: null, photoFile: null, signatureFile: null })
   const [errors, setErrors] = useState<Errors>({})
   const [submitting, setSubmitting] = useState(false)
+  const [submitMsg, setSubmitMsg] = useState('Uploading your files…')
   const [submitted, setSubmitted] = useState(false)
 
   const isPlacement = data.services.includes('Placement Support')
@@ -223,11 +194,14 @@ export default function ApplicationForm() {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     const errs = validate(3)
     if (Object.keys(errs).length) { setErrors(errs); return }
+
     setSubmitting(true)
+    setSubmitMsg('Uploading your files…')
+    const msgTimer = setTimeout(() => setSubmitMsg('Almost there, hang tight…'), 7000)
 
     const fd = new FormData()
     ;(Object.keys(data) as Array<keyof typeof data>).forEach(key => {
@@ -239,7 +213,9 @@ export default function ApplicationForm() {
     if (files.signatureFile) fd.append('signatureFile', files.signatureFile)
 
     const result = await submitApplication(fd)
+    clearTimeout(msgTimer)
     setSubmitting(false)
+
     if (result.success) {
       setSubmitted(true)
     } else {
@@ -247,7 +223,7 @@ export default function ApplicationForm() {
     }
   }
 
-  /* Success screen */
+  /* ── Success screen ── */
   if (submitted) {
     return (
       <div className="text-center py-16 px-10 bg-card border border-frame rounded-2xl shadow-card">
@@ -256,10 +232,8 @@ export default function ApplicationForm() {
         <p className="text-muted mb-7 text-base">
           Thank you! Our team will reach out to you within 24 hours. Check your email for a confirmation.
         </p>
-        <Link
-          href="/"
-          className="inline-block bg-primary text-white px-7 py-3 rounded-lg font-syne font-semibold text-[15px] hover:bg-primary-dark transition-colors shadow-[0_4px_16px_rgba(26,86,255,0.25)]"
-        >
+        <Link href="/"
+          className="inline-block bg-primary text-white px-7 py-3 rounded-lg font-syne font-semibold text-[15px] hover:bg-primary-dark transition-colors shadow-[0_4px_16px_rgba(26,86,255,0.25)]">
           Back to Home
         </Link>
       </div>
@@ -267,48 +241,68 @@ export default function ApplicationForm() {
   }
 
   const btnPrimary =
-    'bg-primary text-white px-7 py-3 rounded-lg font-syne font-semibold text-[15px] hover:bg-primary-dark hover:-translate-y-0.5 transition-all shadow-[0_4px_16px_rgba(26,86,255,0.25)]'
+    'inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-syne font-semibold text-[15px] hover:bg-primary-dark hover:-translate-y-0.5 transition-all shadow-[0_4px_16px_rgba(26,86,255,0.25)]'
   const btnOutline =
-    'bg-transparent text-primary px-7 py-3 rounded-lg font-syne font-semibold text-[15px] border-2 border-primary hover:bg-primary hover:text-white transition-all'
+    'inline-flex items-center justify-center gap-2 bg-transparent text-primary px-6 py-3 rounded-lg font-syne font-semibold text-[15px] border-2 border-primary hover:bg-primary hover:text-white transition-all'
 
   return (
-    <div ref={formRef} className="bg-card border border-frame rounded-2xl p-9 shadow-card max-sm:p-6">
-      {/* Progress bar */}
-      <div
-        className="flex items-center gap-0 mb-9 pb-7 border-b border-frame flex-wrap gap-y-2"
-        role="list"
-        aria-label="Application steps"
-      >
+    <div ref={formRef} className="relative bg-card border border-frame rounded-2xl p-8 shadow-card max-sm:p-5">
+
+      {/* ── Loading overlay ── */}
+      {submitting && (
+        <div className="absolute inset-0 bg-card/90 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center z-10 gap-4 px-8 text-center">
+          <div className="w-11 h-11 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <p className="text-sm font-semibold text-prose">{submitMsg}</p>
+          <p className="text-xs text-muted">Please wait — do not close this page</p>
+        </div>
+      )}
+
+      {/* ── Stepper: mobile ── */}
+      <div className="flex items-center justify-between mb-7 pb-5 border-b border-frame sm:hidden" aria-label="Application steps">
+        <div className="flex items-center gap-2.5">
+          <span className="bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded-full tabular-nums leading-tight">
+            {step} / {STEPS.length}
+          </span>
+          <span className="text-sm font-semibold text-prose">{STEPS[step - 1].label}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {STEPS.map(({ num }) => (
+            <div key={num} className={`h-2 rounded-full transition-all duration-300 ${
+              num === step ? 'w-6 bg-primary' : num < step ? 'w-2 bg-success' : 'w-2 bg-frame'
+            }`} />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Stepper: desktop ── */}
+      <div className="hidden sm:flex items-center mb-9 pb-7 border-b border-frame" role="list" aria-label="Application steps">
         {STEPS.map(({ num, label }, idx) => (
-          <div key={num} className="contents">
-            <div
-              role="listitem"
-              aria-current={step === num ? 'step' : undefined}
-              className={`flex items-center gap-1.5 py-2 px-3.5 rounded-lg text-[13px] font-medium border transition-all whitespace-nowrap
+          <Fragment key={num}>
+            <div role="listitem" aria-current={step === num ? 'step' : undefined}
+              className="flex items-center gap-2 flex-shrink-0">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold border-2 transition-all
                 ${step === num
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary border-primary text-white'
                   : step > num
-                  ? 'bg-success/10 text-success border-success/30'
-                  : 'bg-card text-muted border-frame'}`}
-            >
-              {step > num && (
-                <span className="text-xs font-bold" aria-hidden="true">✓</span>
-              )}
-              {label}
+                  ? 'bg-success border-success text-white'
+                  : 'bg-card border-frame text-muted'}`}>
+                {step > num ? '✓' : num}
+              </div>
+              <span className={`text-[13px] font-medium whitespace-nowrap transition-colors
+                ${step === num ? 'text-prose font-semibold' : step > num ? 'text-success' : 'text-muted'}`}>
+                {label}
+              </span>
             </div>
-            {idx < 2 && (
-              <div
-                aria-hidden="true"
-                className={`flex-1 h-0.5 transition-colors sm:block hidden ${
-                  step > idx + 1 ? 'bg-success' : 'bg-frame'
-                }`}
-              />
+            {idx < STEPS.length - 1 && (
+              <div aria-hidden="true"
+                className={`flex-1 h-0.5 mx-3 transition-colors ${step > idx + 1 ? 'bg-success' : 'bg-frame'}`} />
             )}
-          </div>
+          </Fragment>
         ))}
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
+
         {/* ── STEP 1 ── */}
         {step === 1 && (
           <div role="group" aria-labelledby="s1">
@@ -342,8 +336,10 @@ export default function ApplicationForm() {
             </div>
 
             <div className="flex justify-end mt-8 pt-6 border-t border-frame">
-              <button type="button" onClick={() => goNext(1)} className={btnPrimary}>
-                Next: Professional Details →
+              <button type="button" onClick={() => goNext(1)} className={`${btnPrimary} max-sm:w-full`}>
+                <span className="hidden sm:inline">Next: Professional Details</span>
+                <span className="sm:hidden">Continue</span>
+                <span aria-hidden="true">→</span>
               </button>
             </div>
           </div>
@@ -407,9 +403,15 @@ export default function ApplicationForm() {
               </fieldset>
             </div>
 
-            <div className="flex justify-between mt-8 pt-6 border-t border-frame">
-              <button type="button" onClick={() => goPrev(2)} className={btnOutline}>← Back</button>
-              <button type="button" onClick={() => goNext(2)} className={btnPrimary}>Next: Documents →</button>
+            <div className="flex items-center justify-between gap-3 mt-8 pt-6 border-t border-frame max-sm:flex-col-reverse">
+              <button type="button" onClick={() => goPrev(2)} className={`${btnOutline} max-sm:w-full`}>
+                <span aria-hidden="true">←</span> Back
+              </button>
+              <button type="button" onClick={() => goNext(2)} className={`${btnPrimary} max-sm:w-full`}>
+                <span className="hidden sm:inline">Next: Documents</span>
+                <span className="sm:hidden">Continue</span>
+                <span aria-hidden="true">→</span>
+              </button>
             </div>
           </div>
         )}
@@ -439,9 +441,7 @@ export default function ApplicationForm() {
             {isPlacement && (
               <div className="border border-accent/25 rounded-xl p-6 bg-[rgba(255,107,53,0.03)] mb-5">
                 <div className="mb-5 p-3 px-4 bg-[rgba(255,107,53,0.08)] rounded-lg">
-                  <strong className="text-sm block mb-1 text-amber-700">
-                    ⚠️ Placement Support Applicants Only
-                  </strong>
+                  <strong className="text-sm block mb-1 text-amber-700">⚠️ Placement Support Applicants Only</strong>
                   <p className="text-[13px] text-amber-800 m-0">
                     The following documents are mandatory as per the placement agreement.
                   </p>
@@ -469,7 +469,7 @@ export default function ApplicationForm() {
                   className="w-5 h-5 accent-primary flex-shrink-0 mt-0.5" />
                 <span className="leading-relaxed text-prose">
                   I have read and agree to the{' '}
-                  <Link href="/placement" target="_blank" className="text-primary underline">Terms &amp; Conditions</Link>
+                  <Link href="/terms" target="_blank" className="text-primary underline">Terms &amp; Conditions</Link>
                   {' '}and{' '}
                   <Link href="/placement" target="_blank" className="text-primary underline">Placement Agreement</Link>.
                   {' '}I understand that if I am placed through HireReady, I will pay ₹60,000 as a placement fee.{' '}
@@ -487,14 +487,16 @@ export default function ApplicationForm() {
               </div>
             )}
 
-            <div className="flex justify-between mt-8 pt-6 border-t border-frame">
-              <button type="button" onClick={() => goPrev(3)} className={btnOutline}>← Back</button>
+            <div className="flex items-center justify-between gap-3 mt-8 pt-6 border-t border-frame max-sm:flex-col-reverse">
+              <button type="button" onClick={() => goPrev(3)} className={`${btnOutline} max-sm:w-full`}>
+                <span aria-hidden="true">←</span> Back
+              </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-primary text-white px-8 py-3.5 rounded-lg font-syne font-semibold text-base hover:bg-primary-dark transition-colors shadow-[0_4px_16px_rgba(26,86,255,0.25)] disabled:opacity-70 disabled:cursor-not-allowed"
+                className={`${btnPrimary} max-sm:w-full disabled:opacity-70 disabled:cursor-not-allowed`}
               >
-                {submitting ? 'Submitting...' : 'Submit Application 🚀'}
+                Submit Application 🚀
               </button>
             </div>
           </div>

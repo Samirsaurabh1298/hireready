@@ -69,35 +69,33 @@ export async function submitApplication(
       signatureFile?.size ? uploadFile(supabase, signatureFile, 'signatures', id) : null,
     ])
 
-    // Save to database
-    const { error: dbError } = await supabase.from('applications').insert({
-      id,
-      full_name:          fullName,
-      email,
-      phone,
-      current_location:   currentLocation,
-      preferred_location: preferredLocation,
-      job_role:           currentRole,
-      current_company:    currentCompany   || null,
-      experience,
-      expected_salary:    expectedSalary   || null,
-      skills,
-      services,
-      linkedin_url:       linkedinUrl      || null,
-      naukri_url:         naukriUrl        || null,
-      resume_path:        resumePath,
-      photo_path:         photoPath,
-      signature_path:     signaturePath,
-      status:             'new',
-    })
-    if (dbError) throw new Error(dbError.message)
-
-    // Generate 1-hour signed URLs for the team email
-    const [resumeUrl, photoUrl, signatureUrl] = await Promise.all([
+    // Save to DB + generate signed URLs in parallel (saves one round-trip)
+    const [dbResult, resumeUrl, photoUrl, signatureUrl] = await Promise.all([
+      supabase.from('applications').insert({
+        id,
+        full_name:          fullName,
+        email,
+        phone,
+        current_location:   currentLocation,
+        preferred_location: preferredLocation,
+        job_role:           currentRole,
+        current_company:    currentCompany   || null,
+        experience,
+        expected_salary:    expectedSalary   || null,
+        skills,
+        services,
+        linkedin_url:       linkedinUrl      || null,
+        naukri_url:         naukriUrl        || null,
+        resume_path:        resumePath,
+        photo_path:         photoPath,
+        signature_path:     signaturePath,
+        status:             'new',
+      }),
       signedUrl(supabase, resumePath),
       signedUrl(supabase, photoPath),
       signedUrl(supabase, signaturePath),
     ])
+    if (dbResult.error) throw new Error(dbResult.error.message)
 
     const teamEmail = process.env.TEAM_EMAIL ?? 'support@hireready.in'
 
