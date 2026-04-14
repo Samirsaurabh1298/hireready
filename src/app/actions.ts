@@ -182,39 +182,56 @@ function teamEmailHtml(d: {
 }
 
 function applicantEmailHtml(d: { fullName: string; services: string[] }) {
-  const steps = [
-    'Our team reviews your application',
-    'A career expert contacts you within 24 hours',
-    'We share a personalised career plan',
-    'Work begins — resumes, profiles, referrals and more',
-  ]
+  const firstName = d.fullName.split(' ')[0]
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#f0f2fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-<div style="max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e5f0">
-  <div style="background:#1a56ff;padding:28px 32px;text-align:center">
-    <p style="margin:0;color:#fff;font-size:22px;font-weight:800;font-family:sans-serif">HireReady</p>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e5f0">
+
+  <!-- Header -->
+  <div style="background:#1a56ff;padding:32px;text-align:center">
+    <p style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px">HireReady</p>
+    <p style="margin:6px 0 0;color:rgba(255,255,255,0.75);font-size:13px">Career Services &amp; Placement Support</p>
   </div>
-  <div style="padding:36px 32px">
-    <h2 style="margin:0 0 10px;font-size:22px;color:#1a1d2e;font-family:sans-serif">Hi ${d.fullName}! 👋</h2>
-    <p style="color:#5a6080;font-size:15px;line-height:1.7;margin:0 0 26px;font-family:sans-serif">
-      We've received your application for <strong style="color:#1a56ff">${d.services.join(', ')}</strong>. Our team is already on it!
+
+  <!-- Body -->
+  <div style="padding:40px 36px">
+    <p style="margin:0 0 20px;font-size:16px;color:#1a1d2e;line-height:1.6">Hello ${firstName},</p>
+
+    <p style="margin:0 0 20px;font-size:15px;color:#4a5068;line-height:1.75">
+      We've received your application for
+      <strong style="color:#1a1d2e">${d.services.join(', ')}</strong>.
     </p>
-    <div style="background:#f8f9ff;border-radius:10px;padding:22px 24px;margin-bottom:28px">
-      <p style="margin:0 0 14px;font-size:12px;font-weight:700;color:#1a1d2e;text-transform:uppercase;letter-spacing:0.07em;font-family:sans-serif">What happens next</p>
-      ${steps.map((step, i) => `
-      <div style="display:flex;align-items:flex-start;gap:10px;${i < steps.length - 1 ? 'margin-bottom:12px' : ''}">
-        <span style="display:inline-block;min-width:24px;height:24px;background:#1a56ff;color:#fff;border-radius:50%;text-align:center;line-height:24px;font-size:12px;font-weight:700;font-family:sans-serif">${i + 1}</span>
-        <span style="font-size:14px;color:#5a6080;line-height:1.6;padding-top:3px;font-family:sans-serif">${step}</span>
-      </div>`).join('')}
+
+    <p style="margin:0 0 20px;font-size:15px;color:#4a5068;line-height:1.75">
+      We will review your submission and get back to you within <strong style="color:#1a1d2e">24 hours</strong>.
+      In the meantime, feel free to explore our services or reach out if you have any questions.
+    </p>
+
+    <p style="margin:0 0 32px;font-size:15px;color:#4a5068;line-height:1.75">
+      Thanks for choosing HireReady. We're excited to help you take the next step in your career!
+    </p>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-bottom:32px">
+      <a href="https://hireready-xi-nine.vercel.app" style="display:inline-block;background:#1a56ff;color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:15px;font-weight:600;letter-spacing:0.2px">
+        Visit HireReady →
+      </a>
     </div>
-    <p style="color:#5a6080;font-size:14px;line-height:1.8;margin:0 0 26px;font-family:sans-serif">
-      Questions? Reply to this email or reach us at:<br>
-      📞 +91 0000000000 (Mon–Sat, 9am–6pm)
+
+    <hr style="border:none;border-top:1px solid #e8eaf0;margin:0 0 24px">
+
+    <p style="margin:0;font-size:13px;color:#8a93b0;line-height:1.7">
+      Questions? Reply to this email or contact us at
+      <a href="mailto:supporthireready@gmail.com" style="color:#1a56ff;text-decoration:none">supporthireready@gmail.com</a><br>
+      We're available Mon – Sat, 9:00 AM – 6:00 PM IST.
     </p>
   </div>
-  <div style="padding:14px 32px;background:#f8f9ff;border-top:1px solid #e2e5f0;text-align:center">
-    <p style="margin:0;font-size:12px;color:#5a6080;font-family:sans-serif">© ${new Date().getFullYear()} HireReady. All rights reserved.</p>
+
+  <!-- Footer -->
+  <div style="background:#f8f9ff;border-top:1px solid #e2e5f0;padding:16px 36px;text-align:center">
+    <p style="margin:0;font-size:12px;color:#a0a8c0">© ${new Date().getFullYear()} HireReady. All rights reserved.</p>
   </div>
+
 </div>
 </body></html>`
 }
