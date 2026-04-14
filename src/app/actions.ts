@@ -1,7 +1,9 @@
 'use server'
 
 import { createServerClient } from '@/lib/supabase'
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 /* ── helpers ── */
 
@@ -18,18 +20,6 @@ async function uploadFile(
     .upload(path, file, { contentType: file.type })
   if (error) { console.error(`Upload error [${folder}]:`, error.message); return null }
   return path
-}
-
-function createMailer() {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, ''), // strip spaces from app password
-    },
-  })
 }
 
 /* ── main action ── */
@@ -91,47 +81,29 @@ export async function submitApplication(
     })
     if (dbError) throw new Error(dbError.message)
 
-    // Send Gmail notifications — must be awaited on Vercel (function shuts down on return)
-    if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
-      const mailer = createMailer()
-      const gmailUser = process.env.GMAIL_USER
-
-      // Verify SMTP connection before sending
-      try {
-        await mailer.verify()
-        console.log('Gmail SMTP connection verified')
-      } catch (verifyErr) {
-        console.error('Gmail SMTP verify failed:', verifyErr)
-      }
-
-      await Promise.race([
-        Promise.all([
-          // Team notification
-          mailer.sendMail({
-            from:    `"HireReady Leads" <${gmailUser}>`,
-            to:      gmailUser,
-            subject: `New Lead: ${fullName} — ${services.join(', ')}`,
-            html:    teamEmailHtml({
-              fullName, email, phone, currentLocation, preferredLocation,
-              currentRole, currentCompany, experience, expectedSalary,
-              skills, services, linkedinUrl, naukriUrl,
-            }),
-          }).then(info => console.log('Team email sent:', info.messageId))
-            .catch(err  => console.error('Team email failed:', err)),
-          // Applicant confirmation
-          mailer.sendMail({
-            from:    `"HireReady" <${gmailUser}>`,
-            to:      email,
-            subject: 'We received your application — HireReady',
-            html:    applicantEmailHtml({ fullName, services }),
-          }).then(info => console.log('Applicant email sent:', info.messageId))
-            .catch(err  => console.error('Applicant email failed:', err)),
-        ]),
-        new Promise(resolve => setTimeout(resolve, 15_000)), // 15s max
-      ])
-    } else {
-      console.warn('Gmail env vars missing — GMAIL_USER or GMAIL_APP_PASSWORD not set')
-    }
+    // Send emails via Resend (HTTP API — works reliably on Vercel)
+    const teamEmail = process.env.TEAM_EMAIL ?? 'supporthireready@gmail.com'
+    const [teamResult, applicantResult] = await Promise.all([
+      resend.emails.send({
+        from:    'HireReady <onboarding@resend.dev>',
+        to:      teamEmail,
+        subject: `New Lead: ${fullName} — ${services.join(', ')}`,
+        html:    teamEmailHtml({
+          fullName, email, phone, currentLocation, preferredLocation,
+          currentRole, currentCompany, experience, expectedSalary,
+          skills, services, linkedinUrl, naukriUrl,
+        }),
+      }),
+      resend.emails.send({
+        from:    'HireReady <onboarding@resend.dev>',
+        to:      email,
+        subject: 'We received your application — HireReady',
+        html:    applicantEmailHtml({ fullName, services }),
+      }),
+    ])
+    if (teamResult.error)     console.error('Team email error:',     teamResult.error)
+    if (applicantResult.error) console.error('Applicant email error:', applicantResult.error)
+    console.log('Emails sent — team:', teamResult.data?.id, 'applicant:', applicantResult.data?.id)
 
     return { success: true }
   } catch (err) {
