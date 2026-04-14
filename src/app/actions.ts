@@ -144,8 +144,10 @@ function teamEmailHtml(d: {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f0f2fc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
 <div style="max-width:620px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e5f0">
-  <div style="background:#1a56ff;padding:24px 32px">
-    <img src="https://hireready-xi-nine.vercel.app/images/hireready-logo.png" alt="HireReady" width="160" style="display:block;margin-bottom:14px;max-width:160px" />
+  <div style="background:#ffffff;padding:16px 32px;border-bottom:1px solid #e2e5f0">
+    <img src="https://hireready-xi-nine.vercel.app/images/hireready-logo.png" alt="HireReady" width="160" style="display:block;max-width:160px" />
+  </div>
+  <div style="background:#1a56ff;padding:20px 32px">
     <h1 style="margin:0;color:#fff;font-size:18px;font-weight:700;font-family:sans-serif">New Lead Received 🎯</h1>
     <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;font-family:sans-serif">${d.services.join(' · ')}</p>
   </div>
@@ -187,9 +189,11 @@ function applicantEmailHtml(d: { fullName: string; services: string[] }) {
 <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e2e5f0">
 
   <!-- Header -->
-  <div style="background:#1a56ff;padding:28px 32px;text-align:center">
-    <img src="https://hireready-xi-nine.vercel.app/images/hireready-logo.png" alt="HireReady" width="160" style="display:block;margin:0 auto 10px;max-width:160px" />
-    <p style="margin:0;color:rgba(255,255,255,0.75);font-size:13px;font-family:sans-serif">Career Services &amp; Placement Support</p>
+  <div style="background:#ffffff;padding:20px 32px;text-align:center;border-bottom:1px solid #e2e5f0">
+    <img src="https://hireready-xi-nine.vercel.app/images/hireready-logo.png" alt="HireReady" width="160" style="display:block;margin:0 auto;max-width:160px" />
+  </div>
+  <div style="background:#1a56ff;padding:20px 32px;text-align:center">
+    <p style="margin:0;color:#ffffff;font-size:15px;font-weight:600;font-family:sans-serif">Career Services &amp; Placement Support</p>
   </div>
 
   <!-- Body -->
