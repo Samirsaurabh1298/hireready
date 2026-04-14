@@ -99,24 +99,30 @@ export async function submitApplication(
 
     const teamEmail = process.env.TEAM_EMAIL ?? 'support@hireready.in'
 
-    await Promise.all([
-      resend.emails.send({
-        from:    'HireReady Applications <applications@hireready.in>',
-        to:      teamEmail,
-        subject: `New Application: ${fullName} — ${services.join(', ')}`,
-        html:    teamEmailHtml({
-          fullName, email, phone, currentLocation, preferredLocation,
-          currentRole, currentCompany, experience, expectedSalary,
-          skills, services, linkedinUrl, naukriUrl,
-          resumeUrl, photoUrl, signatureUrl,
+    // Send emails with a 15s timeout — a slow/broken email provider must not block the user.
+    // Data is already saved; email failure is non-fatal.
+    const emailTimeout = new Promise<void>(resolve => setTimeout(resolve, 15_000))
+    await Promise.race([
+      Promise.all([
+        resend.emails.send({
+          from:    'HireReady Applications <applications@hireready.in>',
+          to:      teamEmail,
+          subject: `New Application: ${fullName} — ${services.join(', ')}`,
+          html:    teamEmailHtml({
+            fullName, email, phone, currentLocation, preferredLocation,
+            currentRole, currentCompany, experience, expectedSalary,
+            skills, services, linkedinUrl, naukriUrl,
+            resumeUrl, photoUrl, signatureUrl,
+          }),
         }),
-      }),
-      resend.emails.send({
-        from:    'HireReady <hello@hireready.in>',
-        to:      email,
-        subject: 'We received your application — HireReady',
-        html:    applicantEmailHtml({ fullName, services }),
-      }),
+        resend.emails.send({
+          from:    'HireReady <hello@hireready.in>',
+          to:      email,
+          subject: 'We received your application — HireReady',
+          html:    applicantEmailHtml({ fullName, services }),
+        }),
+      ]).catch(err => console.error('Email send error (non-fatal):', err)),
+      emailTimeout,
     ])
 
     return { success: true }

@@ -148,6 +148,10 @@ export default function ApplicationForm() {
   }
 
   function setFile(field: keyof Files, file: File | null) {
+    if (file && file.size > 10 * 1024 * 1024) {
+      setErrors(e => ({ ...e, [field]: 'File must be under 10 MB. Please compress or trim your file.' }))
+      return
+    }
     setFiles(f => ({ ...f, [field]: file }))
     setErrors(e => ({ ...e, [field]: '' }))
   }
@@ -212,7 +216,13 @@ export default function ApplicationForm() {
     if (files.photoFile)     fd.append('photoFile',     files.photoFile)
     if (files.signatureFile) fd.append('signatureFile', files.signatureFile)
 
-    const result = await submitApplication(fd)
+    const timeoutPromise = new Promise<{ success: boolean; error?: string }>(resolve =>
+      setTimeout(() => resolve({
+        success: false,
+        error: 'Upload is taking too long. Please try a smaller file or check your connection.',
+      }), 90_000)
+    )
+    const result = await Promise.race([submitApplication(fd), timeoutPromise])
     clearTimeout(msgTimer)
     setSubmitting(false)
 
